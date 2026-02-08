@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
@@ -12,7 +11,10 @@ const App: React.FC = () => {
     <HashRouter>
       <div className="min-h-screen flex flex-col bg-yisraeli-blue">
         <Header />
-        <main className="flex-grow container mx-auto px-4 py-8 pt-28 md:pt-36">
+        
+        {/* --- התיקון נמצא בשורה הזו --- */}
+        {/* שיניתי ל-pt-[155px] בנייד ו-pt-[210px] במחשב כדי לתת מקום לבאנר החדש */}
+        <main className="flex-grow container mx-auto px-4 py-8 pt-[155px] md:pt-[210px]">
           <Routes>
             <Route path="/" element={<Navigate to={CATEGORY_DETAILS.prints.path} replace />} />
             <Route 
