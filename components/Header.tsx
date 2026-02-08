@@ -3,58 +3,64 @@ import { NavLink } from 'react-router-dom';
 import { CATEGORY_DETAILS } from '../constants';
 
 const Header: React.FC = () => {
-  // --- לוגיקה למילים המתחלפות ---
   const words = ["אושר", "אהבה", "משפחה", "זכרונות", "קסם"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentWordIndex((prev) => (prev + 1) % words.length);
-    }, 2500); // מחליף מילה כל 2.5 שניות
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
-  // -----------------------------
 
   const navLinkClass = ({ isActive }: { isActive: boolean }): string =>
-    `whitespace-nowrap text-sm md:text-base font-bold transition-all duration-200 px-3 py-1 rounded-md ${
+    `whitespace-nowrap text-xs md:text-sm font-bold transition-all duration-200 px-2 py-1 rounded-sm ${
       isActive
-        ? 'text-black bg-white/20 shadow-sm' // הדגשה כשהקישור פעיל
-        : 'text-gray-900 hover:text-black hover:bg-white/10' // צבע רגיל
+        ? 'text-black bg-white/30' 
+        : 'text-gray-900 hover:text-black hover:bg-white/10'
     }`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-col shadow-lg">
       
-      {/* --- חלק עליון: לוגו + אנימציית טקסט --- */}
-      {/* הוספתי רקע עדין מאוד (גרדיאנט) כדי לשבור את הלבן הבוהק */}
-      <div className="bg-gradient-to-b from-white to-gray-50 w-full flex flex-col items-center justify-center py-4 relative overflow-hidden">
+      {/* --- חלק עליון: מכווץ, מעוצב ועם רקע מעניין --- */}
+      <div className="relative w-full flex flex-col items-center justify-center py-2 overflow-hidden bg-white">
         
-        {/* קישוטים עדינים ברקע (עיגולים צהובים מטושטשים בצדדים) - אופציונלי */}
-        <div className="absolute top-0 left-10 w-24 h-24 bg-yellow-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-0 right-10 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-30"></div>
+        {/* אלמנט עיצובי: רשת נקודות ברקע לשבירת הריקנות */}
+        <div className="absolute inset-0 opacity-10" 
+             style={{ backgroundImage: 'radial-gradient(#f7b500 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+        </div>
+        
+        {/* כתמי צבע עדינים בצדדים */}
+        <div className="absolute -left-10 -top-10 w-32 h-32 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute -right-10 top-0 w-24 h-24 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
 
-        <NavLink to="/" className="z-10 transform hover:scale-105 transition-transform duration-500">
-          <img 
-            src="/logo.png" 
-            alt="לוגו ישראלי" 
-            className="h-28 md:h-32 object-contain drop-shadow-sm" 
-          />
-        </NavLink>
+        {/* תוכן הבאנר העליון */}
+        <div className="relative z-10 flex flex-col items-center gap-0">
+            <NavLink to="/">
+            {/* הקטנתי את הלוגו משמעותית כדי לחסוך גובה */}
+            <img 
+                src="/logo.png" 
+                alt="לוגו ישראלי" 
+                className="h-14 md:h-20 object-contain drop-shadow-sm transform hover:scale-105 transition-transform" 
+            />
+            </NavLink>
 
-        {/* --- המשפט המתחלף --- */}
-        <div className="mt-2 text-gray-600 font-medium text-lg flex items-center gap-1 z-10">
-          <span>מדפיסים רגעים של</span>
-          <span className="text-[#f7b500] font-bold min-w-[80px] transition-all duration-500 transform translate-y-0">
-            {words[currentWordIndex]}
-          </span>
+            {/* המשפט המתחלף - גדל ונהיה בולד מאוד */}
+            <div className="text-gray-800 font-black text-lg md:text-2xl flex items-center gap-1.5 leading-none mt-1">
+            <span className="tracking-tight">מדפיסים רגעים של</span>
+            <span className="text-[#f7b500] min-w-[60px] text-center">
+                {words[currentWordIndex]}
+            </span>
+            </div>
         </div>
       </div>
 
-      {/* --- חלק תחתון: תפריט צהוב --- */}
-      <div className="bg-[#f7b500] w-full shadow-inner">
+      {/* --- חלק תחתון: תפריט צהוב סופר-קומפקטי --- */}
+      <div className="bg-[#f7b500] w-full shadow-md z-20">
         <nav className="container mx-auto">
-          {/* הוספתי overflow-x-auto כדי לאפשר גלילה חלקה בנייד */}
-          <div className="flex items-center justify-start md:justify-center gap-2 py-3 px-4 overflow-x-auto no-scrollbar">
+          {/* gap-1 = רווח מינימלי בין כפתורים */}
+          <div className="flex items-center justify-between md:justify-center gap-1 py-2 px-2 overflow-x-auto no-scrollbar">
             
             {Object.values(CATEGORY_DETAILS).map((cat) => (
               <NavLink key={cat.path} to={cat.path} className={navLinkClass}>
@@ -62,6 +68,9 @@ const Header: React.FC = () => {
               </NavLink>
             ))}
             
+            {/* הפרדה קטנה לפני צור קשר */}
+            <div className="w-[1px] h-4 bg-black/10 mx-1"></div>
+
             <NavLink to="/contact" className={navLinkClass}>
               צרו קשר
             </NavLink>
