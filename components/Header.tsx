@@ -1,57 +1,50 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { CATEGORY_DETAILS } from '../constants'; // וודא שהנתיב הזה נכון אצלך
+import { CATEGORY_DETAILS } from '../constants';
 
 const Header: React.FC = () => {
-  // עיצוב הקישורים בתפריט
+  // עיצוב הקישורים - הורדתי את הקו התחתון והוספתי הדגשה עדינה יותר
   const navLinkClass = ({ isActive }: { isActive: boolean }): string =>
-    `whitespace-nowrap pb-2 text-sm md:text-base font-semibold transition-colors duration-300 px-2 ${
+    `whitespace-nowrap text-sm md:text-base font-bold transition-colors duration-200 ${
       isActive
-        ? 'text-gray-900 border-b-2 border-yellow-500' // צבע צהוב לפס הדגשה
-        : 'text-gray-500 hover:text-gray-900'
+        ? 'text-black underline decoration-2 underline-offset-4' // הדגשה כשהקישור פעיל
+        : 'text-gray-800 hover:text-black' // צבע רגיל
     }`;
 
   return (
-    // הורדנו את הגובה הקבוע כדי שההידר יגדל לפי התוכן
-    <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-sm z-50 pb-2">
-      <div className="container mx-auto px-4">
-        
-        {/* שינוי מרכזי: flex-col מסדר את הדברים אחד מתחת לשני */}
-        <div className="flex flex-col items-center justify-center pt-4">
-          
-          {/* חלק עליון: לוגו במרכז */}
-          <div className="mb-4">
-            <NavLink to="/">
-              {/* הלוגו עצמו - וודא שקובץ logo.png קיים בתיקיית public */}
-              <img 
-                src="/logo.png" 
-                alt="לוגו ישראלי" 
-                className="h-20 md:h-24 object-contain mx-auto" 
-              />
-            </NavLink>
-          </div>
+    // ההידר צמוד למעלה ומחולק לשתי קומות
+    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col shadow-md">
+      
+      {/* קומה 1 (עליונה): רקע לבן + לוגו גדול */}
+      <div className="bg-white w-full flex justify-center py-1">
+        <NavLink to="/">
+          <img 
+            src="/logo.png" 
+            alt="לוגו ישראלי" 
+            // הגדלתי את הגובה ל-h-28 (בנייד) ו-h-36 (במחשב)
+            className="h-28 md:h-36 object-contain" 
+          />
+        </NavLink>
+      </div>
 
-          {/* חלק תחתון: תפריט גלילה */}
-          <nav className="w-full flex items-center justify-start md:justify-center gap-6 overflow-x-auto no-scrollbar pb-2">
+      {/* קומה 2 (תחתונה): פס צהוב + תפריט צפוף */}
+      <div className="bg-[#f7b500] w-full overflow-x-auto no-scrollbar">
+        <nav className="container mx-auto px-2">
+          {/* צמצמתי את ה-gap ל-3 כדי שייכנסו יותר פריטים */}
+          <div className="flex items-center justify-start md:justify-center gap-4 py-2 min-w-max px-2">
             
-            {/* כפתור הבית (אופציונלי, אם תרצה אותו גם בתפריט) */}
-             <NavLink to="/" className={navLinkClass}>
-                ראשי
-             </NavLink>
-
-            {/* שאר הקטגוריות */}
+            {/* כאן רצות הקטגוריות (בלי "ראשי") */}
             {Object.values(CATEGORY_DETAILS).map((cat) => (
               <NavLink key={cat.path} to={cat.path} className={navLinkClass}>
                 {cat.name}
               </NavLink>
             ))}
-
+            
             <NavLink to="/contact" className={navLinkClass}>
               צרו קשר
             </NavLink>
-          </nav>
-
-        </div>
+          </div>
+        </nav>
       </div>
     </header>
   );
