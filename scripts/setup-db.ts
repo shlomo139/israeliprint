@@ -33,6 +33,8 @@ async function createTable() {
         customer_notes TEXT,
         total_price DECIMAL(10, 2) NOT NULL,
         drive_folder_url VARCHAR(1024),
+        upload_method VARCHAR(20),
+        upload_link TEXT,
         payment_status VARCHAR(50) DEFAULT 'pending',
         order_status VARCHAR(50) DEFAULT 'new',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -41,11 +43,14 @@ async function createTable() {
     
     console.log('✅ Table "orders" verified/created successfully!');
     
-    console.log('🔄 Checking for missing columns (order_number)...');
+    console.log('🔄 Checking for missing columns...');
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number VARCHAR(10) UNIQUE;`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS upload_method VARCHAR(20);`;
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS upload_link TEXT;`;
     console.log('✅ Columns verified!');
 
     process.exit(0);
+
   } catch (error) {
     console.error('❌ Error creating orders table:', error);
     process.exit(1);
