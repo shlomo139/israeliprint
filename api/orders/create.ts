@@ -1,0 +1,81 @@
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { sql } from '@vercel/postgres';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS configuration
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { 
+        customerName, 
+        customerPhone, 
+        productType, 
+        size, 
+        quantity, 
+        marginsSettings, 
+        customerNotes, 
+        totalPrice, 
+        driveFolderUrl 
+    } = req.body;
+
+    if (!customerName || !customerPhone || !productType || !quantity || typeof totalPrice === 'undefined') {
+      return res.status(400).json({ error: 'Missing required parameters (name, phone, product, quantity, price).' });
+    }
+
+    // Check environment var fallback for standard @vercel/postgres operation
+    if (!process.env.POSTGRES_URL && process.env.DATABASE_URL) {
+      process.env.POSTGRES_URL = process.env.DATABASE_URL;
+    }
+
+    // Generate a secure 5-digit order number
+    const orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
+
+    const result = await sql`
+      INSERT INTO orders (
+        order_number,
+        customer_name, 
+        customer_phone, 
+        product_type, 
+        size, 
+        quantity, 
+        margins_settings, 
+        customer_notes, 
+        total_price, 
+        drive_folder_url
+      ) VALUES (
+        ${orderNumber},
+        ${customerName}, 
+        ${customerPhone}, 
+        ${productType}, 
+        ${size || null}, 
+        ${quantity},
+        ${marginsSettings || null}, 
+        ${customerNotes || null}, 
+        ${totalPrice}, 
+        ${driveFolderUrl || null}
+      )
+      RETURNING id, order_number, created_at;
+    `;
+
+    return res.status(200).json({
+      success: true,
+      order: result.rows[0]
+    });
+
+  } catch (error: any) {
+    console.error("Create Order Error:", error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}

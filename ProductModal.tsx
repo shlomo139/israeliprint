@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Product, Category, CropOption } from '../types';
 import { CROP_OPTIONS, WHATSAPP_NUMBER, KIT_PRICING } from '../constants';
 import { X, Zap, Minus, Plus, Check, ZoomIn, Info } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -170,27 +169,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
     const totalCost = itemCost * quantity; // Total Cost = (Unit Cost * Qty)
     const exactProfit = totalPrice - totalCost;
 
-    // 4. Supabase Insert (Fire and Forget)
-    const orderDetails = {
-      crop_option: product.category === Category.Prints ? selectedCropOption : null,
-      kit_size: product.category === Category.Kits ? kitSize : null,
-      selected_designs: product.category === Category.Kits ? selectedImageIndices : null,
-      unit_price: currentPricePerUnit,
-      extra_cost_charged: extraCost
-    };
-
-    // We don't await this so the user is redirected immediately
-    supabase.from('orders').insert([{
-      product_name: product.name,
-      quantity: quantity,
-      total_price: totalPrice,
-      estimated_profit: exactProfit,
-      details: orderDetails,
-      source: 'whatsapp_click',
-      created_at: new Date().toISOString()
-    }]).then(({ error }) => {
-        if (error) console.error('Error tracking order:', error);
-    });
+    // TODO: Send order details to backend (Phase 3)
 
     // 5. Open WhatsApp
     window.open(whatsappUrl, '_blank');

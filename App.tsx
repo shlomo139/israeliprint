@@ -4,6 +4,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ProductCategoryPage from './pages/ProductCategoryPage';
 import ContactPage from './pages/ContactPage';
+import HomePage from './pages/HomePage';
+import WhatsAppButton from './components/WhatsAppButton';
 import { CATEGORY_DETAILS } from './constants';
 
 const App: React.FC = () => {
@@ -16,7 +18,7 @@ const App: React.FC = () => {
         {/* שיניתי ל-pt-[155px] בנייד ו-pt-[210px] במחשב כדי לתת מקום לבאנר החדש */}
         <main className="flex-grow container mx-auto px-4 py-8 pt-[155px] md:pt-[210px]">
           <Routes>
-            <Route path="/" element={<Navigate to={CATEGORY_DETAILS.prints.path} replace />} />
+            <Route path="/" element={<HomePage />} />
             <Route 
               path={CATEGORY_DETAILS.prints.path} 
               element={<ProductCategoryPage categoryKey="prints" />} 
@@ -40,6 +42,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
         <Footer />
+        <WhatsAppButton />
       </div>
     </HashRouter>
   );

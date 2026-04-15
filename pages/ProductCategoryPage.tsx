@@ -103,14 +103,10 @@ const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }>
         {/* Action Button */}
         <button
           onClick={() => onOrder(product)}
-          className={`w-full font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all hover:shadow-md active:scale-95 ${
-             isKit 
-             ? 'bg-yisraeli-blue text-white hover:bg-yisraeli-blue/90' 
-             : 'bg-yisraeli-yellow text-yisraeli-blue hover:bg-yellow-400'
-          }`}
+          className="w-full font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all hover:shadow-md active:scale-95 bg-yisraeli-yellow text-yisraeli-blue hover:bg-yellow-400"
         >
-          {isKit ? <Eye className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
-          {isKit ? 'לצפיה בערכה' : 'אני רוצה להזמין'}
+          <ShoppingBag className="w-5 h-5" />
+          אני רוצה להזמין
         </button>
       </div>
     </div>
