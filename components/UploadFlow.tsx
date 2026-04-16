@@ -80,6 +80,17 @@ const UploadFlow: React.FC<UploadFlowProps> = ({ orderNumber, customerName, cust
         }
       }
 
+      // 3. Update database with the folder link and trigger notification
+      await fetch('/api/orders/update-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderNumber, 
+          uploadMethod: 'gallery', 
+          uploadLink: initData.folderUrl 
+        })
+      });
+
       setUploadSuccess(true);
       setTimeout(() => onComplete(), 3000);
     } catch (err) {
@@ -96,7 +107,11 @@ const UploadFlow: React.FC<UploadFlowProps> = ({ orderNumber, customerName, cust
       const res = await fetch('/api/orders/update-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber, driveFolderUrl: driveLink })
+        body: JSON.stringify({ 
+          orderNumber, 
+          uploadMethod: 'link', 
+          uploadLink: driveLink 
+        })
       });
       if (res.ok) {
         setLinkSaved(true);
@@ -108,6 +123,22 @@ const UploadFlow: React.FC<UploadFlowProps> = ({ orderNumber, customerName, cust
       alert("שגיאת רשת.");
     }
     setIsLinkSaving(false);
+  };
+
+  const handleWhatsAppAction = async () => {
+    try {
+      await fetch('/api/orders/update-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderNumber, 
+          uploadMethod: 'whatsapp', 
+          uploadLink: 'בוצע בוואטסאפ' 
+        })
+      });
+    } catch (e) {
+      console.error("Server update failed for WhatsApp click", e);
+    }
   };
 
   const whatsappMessage = encodeURIComponent(`היי, הזמנתי באתר. מספר ההזמנה שלי: ${orderNumber}. אני שולח/ת לכאן את התמונות!`);
@@ -210,6 +241,7 @@ const UploadFlow: React.FC<UploadFlowProps> = ({ orderNumber, customerName, cust
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleWhatsAppAction}
           className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-4 rounded-xl flex items-center justify-center transition-colors shadow-sm"
         >
           <FaWhatsapp className="w-6 h-6 ml-2" />

@@ -280,7 +280,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300 min-h-[500px] max-h-[92vh]">
+      <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300 min-h-[500px] max-h-[92vh]">
 
         {/* Confetti */}
         {isCompleted && (

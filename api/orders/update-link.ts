@@ -33,7 +33,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       SET 
         upload_method = ${uploadMethod},
         upload_link = ${uploadLink || null},
-        drive_folder_url = CASE WHEN ${uploadMethod} = 'gallery' THEN ${uploadLink || null} ELSE drive_folder_url END
+        drive_folder_url = CASE 
+          WHEN ${uploadMethod} IN ('gallery', 'link') THEN ${uploadLink || null} 
+          ELSE drive_folder_url 
+        END
       WHERE order_number = ${orderNumber}
       RETURNING id, order_number, customer_name, customer_phone, upload_method, upload_link;
     `;

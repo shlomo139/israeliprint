@@ -39,7 +39,7 @@ const App: React.FC = () => {
         <Route
           path="*"
           element={
-            <div className="min-h-screen flex flex-col bg-yisraeli-blue">
+            <div className="min-h-screen flex flex-col bg-yisraeli-blue text-white">
               <Header />
               {/* שיניתי ל-pt-[155px] בנייד ו-pt-[210px] במחשב כדי לתת מקום לבאנר */}
               <main className="flex-grow container mx-auto px-4 py-8 pt-[155px] md:pt-[210px]">

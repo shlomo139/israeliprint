@@ -77,7 +77,7 @@ const AdminLoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0f1e] relative overflow-hidden font-sans" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0f1e] relative overflow-hidden font-sans text-white" dir="rtl">
       {/* Dynamic Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px]" />
