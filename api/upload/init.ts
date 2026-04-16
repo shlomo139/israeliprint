@@ -71,6 +71,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error("Failed to create folder");
     }
 
+    // Set permission to 'Anyone with the link can view'
+    await drive.permissions.create({
+      fileId: folderId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
     // Get access token for the raw HTTP request to create Resumable Upload Sessions
     let token: string | null | undefined;
     if (typeof auth.getClient === 'function') {

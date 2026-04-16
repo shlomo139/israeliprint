@@ -42,25 +42,43 @@ const UploadFlow: React.FC<UploadFlowProps> = ({ orderNumber, customerName, cust
       const initData = await initRes.json();
       if (!initRes.ok || !initData.success) throw new Error(initData.error || 'Server error init');
 
-      // 2. Direct PUT to Google
+      // 2. Direct PUT to Google with Concurrency of 3
       let completed = 0;
-      await Promise.all(
-        filesArray.map(async (file, index) => {
-          const { uploadUrl } = initData.uploadUrls[index];
-          const putRes = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-               'Content-Type': file.type || 'application/octet-stream',
-               'Content-Length': file.size.toString()
-            },
-            body: file
+      const concurrencyLimit = 3;
+      const filesWithMeta = filesArray.map((file, index) => ({ file, index }));
+      
+      const uploadTask = async (file: File, index: number) => {
+        const { uploadUrl } = initData.uploadUrls[index];
+        const putRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+             'Content-Type': file.type || 'application/octet-stream',
+             'Content-Length': file.size.toString()
+          },
+          body: file
+        });
+        if (putRes.ok) {
+          completed++;
+          setUploadProgress(Math.round((completed / filesArray.length) * 100));
+        }
+      };
+
+      // Simple pool management
+      const queue = [...filesWithMeta];
+      const activePromises: Promise<void>[] = [];
+      
+      while (queue.length > 0 || activePromises.length > 0) {
+        while (activePromises.length < concurrencyLimit && queue.length > 0) {
+          const item = queue.shift()!;
+          const p = uploadTask(item.file, item.index).then(() => {
+            activePromises.splice(activePromises.indexOf(p), 1);
           });
-          if (putRes.ok) {
-            completed++;
-            setUploadProgress(Math.round((completed / filesArray.length) * 100));
-          }
-        })
-      );
+          activePromises.push(p);
+        }
+        if (activePromises.length > 0) {
+          await Promise.race(activePromises);
+        }
+      }
 
       setUploadSuccess(true);
       setTimeout(() => onComplete(), 3000);
