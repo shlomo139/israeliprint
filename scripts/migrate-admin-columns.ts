@@ -27,13 +27,11 @@ async function migrate() {
         ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending',
         ADD COLUMN IF NOT EXISTS order_status TEXT DEFAULT 'new',
         ADD COLUMN IF NOT EXISTS discount NUMERIC DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS material_cost_override NUMERIC;
+        ADD COLUMN IF NOT EXISTS material_cost_override NUMERIC,
+        ADD COLUMN IF NOT EXISTS upload_method VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS upload_link TEXT;
     `;
-    console.log('✅ Migration complete! Columns added (or already existed):');
-    console.log('   - payment_status (TEXT, default: pending)');
-    console.log('   - order_status   (TEXT, default: new)');
-    console.log('   - discount       (NUMERIC, default: 0)');
-    console.log('   - material_cost_override (NUMERIC, nullable)');
+    console.log('✅ Migration complete! Columns verified.');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);

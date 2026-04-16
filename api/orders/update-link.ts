@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '@vercel/postgres';
-import { sendTelegramNotification, escapeHTML } from '../../lib/telegram';
+import { sendTelegramNotification, escapeHTML } from './../../lib/telegram.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -59,8 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `.trim();
       
       await sendTelegramNotification(msg);
-    } catch (tgErr) {
-      console.error("Telegram notification failed but order update succeeded:", tgErr);
+      console.log(`✅ Telegram notification sent for order ${order.order_number}`);
+    } catch (tgErr: any) {
+      console.error(`❌ Telegram notification failed for order ${order.order_number}:`, tgErr.message || tgErr);
       // We don't fail the request if just notification fails
     }
 

@@ -69,13 +69,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       RETURNING id, order_number, created_at;
     `;
 
+    console.log(`✅ Order ${orderNumber} created successfully in DB.`);
+
     return res.status(200).json({
       success: true,
       order: result.rows[0]
     });
 
   } catch (error: any) {
-    console.error("Create Order Error:", error);
+    console.error("❌ Create Order Error:", error.message || error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
