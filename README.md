@@ -1,20 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# חנות מוצרי הדפסה - Israeli Print
 
-# Run and deploy your AI Studio app
+פרויקט זה הנו חנות למכירת הדפסות, בלוקים מודפסים, מגנטים וערכות צילום, עם ממשק משתמש מתקדם וידידותי ותמיכה מלאה בתצורת Right-to-Left (עברית). המערכת כוללת חזית חנות הפתוחה ללקוחות וממשק מנהל (Admin) משולב לניהול הזמנות ועדכון נתונים.
 
-This contains everything you need to run your app locally.
+## טכנולוגיות ליבה (Tech Stack)
+- **Frontend Framework:** React.js 19 (מבוסס רכיבים)
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS + Vanilla CSS
+- **Backend & Deployment:** Vercel Serverless Functions (`api/`)
+- **Database:** Neon DB (PostgreSQL) - מיועד לשמירת נתוני החנות והגדרות העיצוב
+- **Icons:** Lucide React
 
-View your app in AI Studio: https://ai.studio/apps/drive/1qhTUEnv3IKynAe8peWI8y5HuIwPUSTh9
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## הרצת סביבת פיתוח מקומית
+1. התקנת תלויות:`npm install`
+2. הרצת השרת: `npm run dev`
+3. תצוגה מקומית תהיה לרוב בכתובת: `http://localhost:5173`

@@ -2,59 +2,59 @@ import { sql } from '@vercel/postgres';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// Load the local .env file explicitly manually
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Load environment variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-async function createTable() {
-  const url = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-  if (!url) {
-      console.error("❌ Error: Missing POSTGRES_URL or DATABASE_URL in .env file.");
-      console.error("Please add POSTGRES_URL=postgres://... before running this script.");
-      process.exit(1);
-  }
-
-  // Update the url to Vercel Postgres env dynamically
-  process.env.POSTGRES_URL = url;
-
+async function setupDatabase() {
+  console.log('Starting execution of database setup...');
+  
   try {
-    console.log('🔄 Connecting to Database...');
-    console.log("Creating 'orders' table if it doesn't exist...");
-    
-    const result = await sql`
-      CREATE TABLE IF NOT EXISTS orders (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        order_number VARCHAR(10) UNIQUE,
-        customer_name VARCHAR(255) NOT NULL,
-        customer_phone VARCHAR(50) NOT NULL,
-        product_type VARCHAR(100) NOT NULL,
-        size VARCHAR(100),
-        quantity INTEGER NOT NULL,
-        margins_settings VARCHAR(255),
-        customer_notes TEXT,
-        total_price DECIMAL(10, 2) NOT NULL,
-        drive_folder_url VARCHAR(1024),
-        upload_method VARCHAR(20),
-        upload_link TEXT,
-        payment_status VARCHAR(50) DEFAULT 'pending',
-        order_status VARCHAR(50) DEFAULT 'new',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    // 1. Categories Table
+    console.log('Creating categories table...');
+    await sql`
+      CREATE TABLE IF NOT EXISTS categories (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        path VARCHAR(255) NOT NULL,
+        image_url VARCHAR(1024)
       );
     `;
-    
-    console.log('✅ Table "orders" verified/created successfully!');
-    
-    console.log('🔄 Checking for missing columns...');
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number VARCHAR(10) UNIQUE;`;
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS upload_method VARCHAR(20);`;
-    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS upload_link TEXT;`;
-    console.log('✅ Columns verified!');
 
-    process.exit(0);
+    // 2. Products Table
+    // Exact match to existing frontend logic: using JSONB for tiers array and kitImages
+    console.log('Creating products table...');
+    await sql`
+      CREATE TABLE IF NOT EXISTS products (
+        id VARCHAR(255) PRIMARY KEY,
+        category_id VARCHAR(255) REFERENCES categories(id),
+        name VARCHAR(255) NOT NULL,
+        image_url VARCHAR(1024),
+        cost_price DECIMAL(10, 2),
+        status VARCHAR(50) DEFAULT 'active',
+        tiers JSONB NOT NULL,
+        kit_images JSONB
+      );
+    `;
 
+    // 3. Site Settings Table
+    // Supports alternating between dynamic text/color banner OR a custom designed flyer/image
+    console.log('Creating site_settings table...');
+    await sql`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        banner_mode VARCHAR(50) DEFAULT 'text', -- Options: 'text' | 'image_only'
+        banner_image_url VARCHAR(1024),
+        banner_bg_color VARCHAR(50) DEFAULT 'bg-yisraeli-blue',
+        banner_title VARCHAR(255) DEFAULT 'ישראלי - מדפיסים רגעים של אושר',
+        banner_subtitle VARCHAR(255) DEFAULT 'דואגים לכם לשירות מהיר ואיכותי'
+      );
+    `;
+
+    console.log('✅ Database tables created successfully!');
   } catch (error) {
-    console.error('❌ Error creating orders table:', error);
+    console.error('❌ Error creating database tables:', error);
     process.exit(1);
   }
 }
 
-createTable();
+setupDatabase();

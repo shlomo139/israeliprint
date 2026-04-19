@@ -27,9 +27,13 @@ import {
   Filter,
   CreditCard,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  Settings,
+  Box
 } from 'lucide-react';
 import { getCostPrice, calculateProfit } from '../../../lib/pricing';
+import { AdminCatalogTab } from './AdminCatalogTab';
+import { AdminSettingsTab } from './AdminSettingsTab';
 
 interface Order {
   id: number;
@@ -80,7 +84,7 @@ const fmtTime = (d: string) => {
 
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'orders' | 'dashboard'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'dashboard' | 'catalog' | 'settings'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -273,18 +277,28 @@ const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 p-1.5 bg-slate-900/80 border border-slate-800/50 rounded-2xl w-fit mb-8 shadow-2xl backdrop-blur-md">
+        <div className="flex gap-2 p-1.5 bg-slate-900/80 border border-slate-800/50 rounded-2xl w-fit mb-8 shadow-2xl backdrop-blur-md overflow-x-auto max-w-full">
             <button 
                 onClick={() => setActiveTab('orders')}
-                className={`px-10 py-3 rounded-xl font-black transition-all duration-300 ${activeTab === 'orders' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-white'}`}
-            >הזמנות</button>
+                className={`px-6 md:px-10 py-3 rounded-xl font-black transition-all duration-300 whitespace-nowrap ${activeTab === 'orders' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-white'}`}
+            >ניהול הזמנות</button>
             <button 
                 onClick={() => setActiveTab('dashboard')}
-                className={`px-10 py-3 rounded-xl font-black transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-white'}`}
-            >דשבורד</button>
+                className={`px-6 md:px-10 py-3 rounded-xl font-black transition-all duration-300 whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-white'}`}
+            >ניתוח רווחים</button>
+            <button 
+                onClick={() => setActiveTab('catalog')}
+                className={`px-6 md:px-10 py-3 rounded-xl font-black transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${activeTab === 'catalog' ? 'bg-emerald-500 text-slate-900 shadow-xl shadow-emerald-500/20' : 'text-slate-500 hover:text-emerald-400'}`}
+            ><Box className="w-4 h-4"/> קטלוג ומחירונים</button>
+            <button 
+                onClick={() => setActiveTab('settings')}
+                className={`px-6 md:px-10 py-3 rounded-xl font-black transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${activeTab === 'settings' ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20' : 'text-slate-500 hover:text-rose-400'}`}
+            ><Settings className="w-4 h-4"/> עיצוב ויזואלי</button>
         </div>
 
-        {activeTab === 'dashboard' ? (
+        {activeTab === 'catalog' && <AdminCatalogTab />}
+        {activeTab === 'settings' && <AdminSettingsTab />}
+        {activeTab === 'dashboard' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Analytics Header with Selector */}
             <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 bg-slate-900/40 p-6 rounded-3xl border border-slate-800">
@@ -367,7 +381,8 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
             </div>
           </div>
-        ) : (
+        )}
+        {activeTab === 'orders' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gradient-to-br from-indigo-600/20 to-blue-600/10 border border-blue-500/20 p-8 rounded-3xl flex items-center justify-between shadow-xl backdrop-blur-md">
