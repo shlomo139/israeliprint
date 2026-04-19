@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Product, Category, CropOption } from '../types';
-import { CROP_OPTIONS, KIT_PRICING, WHATSAPP_NUMBER } from '../constants';
+import { Product, CropOption } from '../types';
+import { CROP_OPTIONS, WHATSAPP_NUMBER } from '../constants';
 import { X, Minus, Plus, Check, ZoomIn, UploadCloud, ChevronRight, ChevronLeft, PartyPopper, Send, Link as LinkIcon } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
@@ -83,7 +83,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
 
   // Handle Kit Selection Logic
   useEffect(() => {
-    if (product?.category === Category.Kits) {
+    if (product?.id?.includes('kit') || product?.category === 'kits') {
       setSelectedImageIndices(kitSize === 6 ? [0, 1, 2, 3, 4, 5] : []);
     }
   }, [kitSize, product]);
@@ -97,13 +97,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
     });
   };
 
-  const isKit = product?.category === Category.Kits;
+  const isKit = product?.id?.includes('kit') || product?.category === 'kits';
 
   // Steps
   const steps = useMemo(() => {
     if (!product) return [];
     if (isKit) return ['פרטי לקוח', 'בחירת ערכה', 'כמות', 'הערות להזמנה'];
-    if (product.category === Category.Prints) return ['פרטי לקוח', 'כמות', 'חיתוך', 'הערות להזמנה'];
+    if (product.category === 'prints') return ['פרטי לקוח', 'כמות', 'חיתוך', 'הערות להזמנה'];
     return ['פרטי לקוח', 'כמות', 'הערות להזמנה'];
   }, [product, isKit]);
 
@@ -119,29 +119,47 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
   // Pricing Logic
   const tiersToUse = useMemo(() => {
     if (!product) return [];
-    if (isKit) return KIT_PRICING[kitSize];
-    return product.tiers;
+    return product.tiers || [];
   }, [product, isKit, kitSize]);
+
+  const basePricePerUnit = useMemo(() => {
+    if (!tiersToUse.length) return 0;
+    const sorted = [...tiersToUse].sort((a, b) => a.minQuantity - b.minQuantity);
+    return sorted[0].pricePerUnit;
+  }, [tiersToUse]);
 
   const currentPricePerUnit = useMemo(() => {
     if (!tiersToUse.length) return 0;
+    // B. If a promo exists, ignore tiered pricing and stick to the original base price!
+    if (product?.promo?.buy > 0) return basePricePerUnit;
+
     const sorted = [...tiersToUse].sort((a, b) => b.minQuantity - a.minQuantity);
     const tier = sorted.find(t => quantity >= t.minQuantity);
     return tier ? tier.pricePerUnit : sorted[sorted.length - 1].pricePerUnit;
-  }, [tiersToUse, quantity]);
+  }, [tiersToUse, quantity, product, basePricePerUnit]);
 
-  const { totalPrice, totalSavings } = useMemo(() => {
-    if (!product || !tiersToUse.length) return { totalPrice: 0, totalSavings: 0 };
-    const baseTotal = quantity * currentPricePerUnit;
+  const { totalPrice, totalSavings, unitsToPayFor } = useMemo(() => {
+    if (!product || !tiersToUse.length) return { totalPrice: 0, totalSavings: 0, unitsToPayFor: quantity };
+    
+    let paidUnits = quantity;
+
+    if (product.promo?.buy > 0 && product.promo?.get > 0) {
+      // Calculate max 1 time use logic per customer!
+      const freeUnits = Math.min(product.promo.get, Math.max(0, quantity - product.promo.buy));
+      paidUnits = quantity - freeUnits;
+    }
+
+    let baseTotal = paidUnits * currentPricePerUnit;
+
     let extra = 0;
-    if (product.category === Category.Prints && selectedCropOption === CropOption.Manual) {
+    if (product.category === 'prints' && selectedCropOption === CropOption.Manual) {
       extra = Math.ceil(quantity / 10) * 2.5;
     }
     const finalPrice = baseTotal + extra;
-    const baseTier = [...tiersToUse].sort((a, b) => a.minQuantity - b.minQuantity)[0];
-    const calcSavings = (baseTier.pricePerUnit - currentPricePerUnit) * quantity;
-    return { totalPrice: finalPrice, totalSavings: calcSavings > 0 ? calcSavings : 0 };
-  }, [quantity, currentPricePerUnit, selectedCropOption, product, tiersToUse]);
+
+    const calcSavings = (basePricePerUnit * quantity) - baseTotal;
+    return { totalPrice: finalPrice, totalSavings: calcSavings > 0 ? calcSavings : 0, unitsToPayFor: paidUnits };
+  }, [quantity, currentPricePerUnit, selectedCropOption, product, basePricePerUnit, tiersToUse]);
 
   const handleNext = () => {
     if (step < steps.length) {
@@ -158,7 +176,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
       productType: product?.name,
       quantity,
       totalPrice,
-      marginsSettings: product?.category === Category.Prints ? selectedCropOption : null,
+      marginsSettings: product?.category === 'prints' ? selectedCropOption : null,
       customerNotes,
     };
 
@@ -289,7 +307,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
 
         {/* Header */}
         <div className="bg-yisraeli-blue text-white p-4 flex items-center justify-between z-20 flex-shrink-0">
-          <h2 className="text-xl font-bold">{isCompleted ? '🎉 הזמנתך התקבלה!' : product.name}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold">{isCompleted ? '🎉 הזמנתך התקבלה!' : product.name}</h2>
+            {!isCompleted && product.promo?.buy > 0 && (
+                <span className="bg-amber-400 text-slate-900 text-xs font-black px-2 py-0.5 rounded-full animate-pulse shadow-lg">מבצע {product.promo.buy}+{product.promo.get} !</span>
+            )}
+          </div>
           <button onClick={onClose} disabled={uploadStatus === 'loading'} className="p-1 hover:bg-white/20 rounded-full transition-colors disabled:opacity-30">
             <X className="w-6 h-6" />
           </button>
@@ -373,9 +396,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, product })
                       </div>
                       <button onClick={() => setQuantity(prev => prev + 1)} className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-600 border border-gray-200 hover:bg-gray-50 active:scale-95"><Plus className="w-6 h-6" /></button>
                     </div>
-                    <div className="flex flex-col items-center justify-center mt-4">
-                      <span className="bg-white px-4 py-2 rounded-full font-bold text-lg text-yisraeli-blue shadow-sm">מחיר ליחידה: {currentPricePerUnit.toFixed(2)} ₪</span>
-                      {totalSavings > 0 && (<span className="mt-3 text-green-600 font-extrabold text-sm flex items-center gap-1 bg-green-50 px-3 py-1 rounded">🎉 חסכת {totalSavings.toFixed(2)} ₪ על הכמות!</span>)}
+                    <div className="flex flex-col items-center justify-center mt-4 text-center">
+                      <span className="bg-white px-4 py-2 rounded-full font-bold text-lg text-yisraeli-blue shadow-sm mb-2 block w-full max-w-xs">{isKit ? 'מחיר לערכה' : 'מחיר ליחידה'}: {currentPricePerUnit.toFixed(2)} ₪</span>
+                      
+                      {product.promo?.buy > 0 && product.promo?.get > 0 && (
+                        <div className="bg-amber-100 text-amber-800 border items-center justify-center border-amber-200 px-3 py-1.5 rounded-lg mb-2 text-xs font-black shadow-sm mx-auto flex flex-col gap-1 w-full max-w-xs">
+                          <span className="text-sm">🎁 מבצע: קנה {product.promo.buy} קבל {product.promo.get}</span>
+                          {quantity > unitsToPayFor && <span className="text-rose-600">אתה משלם רק על {unitsToPayFor} (קבלת {quantity - unitsToPayFor} בחינם!)</span>}
+                        </div>
+                      )}
+                      
+                      {totalSavings > 0 && (<span className="mt-1 text-green-600 font-extrabold text-sm block w-full bg-green-50 px-3 py-1.5 rounded-lg shadow-sm border border-green-100 max-w-xs mx-auto">🎉 איזה כיף! חסכת {totalSavings.toFixed(2)} ₪ בהזמנה זו</span>)}
                     </div>
                   </div>
                 </div>

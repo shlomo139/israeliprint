@@ -1,17 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Product, Category, PriceTier } from '../types';
-import { ALL_PRODUCTS } from '../data/products';
-import { CATEGORY_DETAILS, KIT_PRICING } from '../constants';
+import { useParams, Navigate } from 'react-router-dom';
+import { Product, PriceTier } from '../types';
+import { useInventory } from '../src/InventoryContext';
 import ProductModal from '../components/ProductModal';
 import { ShoppingBag, Eye } from 'lucide-react';
 
-interface ProductCategoryPageProps {
-  categoryKey: keyof typeof CATEGORY_DETAILS;
-}
-
 const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }> = ({ product, onOrder }) => {
-  const isKit = product.category === Category.Kits;
+  const isKit = product.category === 'kits';
 
   // Helper to format tier label
   const getTierLabel = (tier: PriceTier, index: number, tiers: PriceTier[]) => {
@@ -39,23 +35,12 @@ const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }>
 
   const renderKitPricing = () => (
     <div className="flex gap-2 text-xs">
-       {/* 3 Magnets Table */}
-       <div className="flex-1 bg-gray-50 p-2 rounded">
-          <p className="font-bold text-center mb-1 text-yisraeli-blue border-b border-gray-200 pb-1">3 מגנטים</p>
-          {KIT_PRICING[3].map((tier, idx) => (
-             <div key={idx} className="flex justify-between">
-                <span>{getTierLabel(tier, idx, KIT_PRICING[3])}</span>
-                <span className="font-bold">{tier.pricePerUnit} ₪</span>
-             </div>
-          ))}
-       </div>
-       {/* 6 Magnets Table */}
-       <div className="flex-1 bg-gray-50 p-2 rounded">
-          <p className="font-bold text-center mb-1 text-yisraeli-blue border-b border-gray-200 pb-1">6 מגנטים</p>
-          {KIT_PRICING[6].map((tier, idx) => (
-             <div key={idx} className="flex justify-between">
-                <span>{getTierLabel(tier, idx, KIT_PRICING[6])}</span>
-                <span className="font-bold">{tier.pricePerUnit} ₪</span>
+       <div className="flex-1 bg-gray-50 p-2 rounded w-full text-gray-900">
+          <p className="font-bold text-center mb-1 text-yisraeli-blue border-b border-gray-200 pb-1">מחירון ערכות</p>
+          {product.tiers.map((tier, idx) => (
+             <div key={idx} className="flex justify-between border-b pb-1 last:border-0 border-gray-200 mt-1">
+                <span className="text-gray-700">{getTierLabel(tier, idx, product.tiers)}</span>
+                <span className="font-bold text-yisraeli-blue">{tier.pricePerUnit} ₪</span>
              </div>
           ))}
        </div>
@@ -63,12 +48,15 @@ const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }>
   );
 
   const renderStandardPricing = () => (
-    <div className="flex-grow space-y-2 mb-6 bg-gray-50 p-4 rounded-lg">
+    <div className="flex-grow space-y-2 mb-6 bg-gray-50 p-4 rounded-lg relative">
       <p className="text-sm text-gray-500 font-semibold mb-2 text-center border-b pb-2">מחירון:</p>
-      {product.tiers.map((tier, index) => (
-        <div key={tier.minQuantity} className="flex justify-between items-center text-sm border-b border-gray-100 last:border-0 py-1">
+      {product.tiers.map((tier: any, index) => (
+        <div key={tier.minQuantity} className="flex justify-between items-center text-sm border-b border-gray-100 last:border-0 py-1 relative">
           <span className="text-gray-700 font-medium">{getTierLabel(tier, index, product.tiers)} {(!tier.label && !isKit) ? 'יחידות' : ''}</span>
-          <span className="text-yisraeli-blue font-bold">{getTierPriceDisplay(tier)} {(!isKit && product.id !== 'print-passport') ? "ליח'" : ''}</span>
+          <div className="flex items-center gap-2">
+            {tier.discountPercentage > 0 && <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded text-[10px] font-black">-{tier.discountPercentage}% הנחה</span>}
+            <span className="text-yisraeli-blue font-bold">{getTierPriceDisplay(tier)} {(!isKit && product.id !== 'print-passport') ? "ליח'" : ''}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -83,6 +71,11 @@ const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }>
           alt={product.name} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" 
         />
+        {product.promo?.buy > 0 && (
+          <div className="absolute top-3 right-3 bg-red-600 text-white font-black px-3 py-1.5 rounded shadow-lg transform -rotate-3 border border-red-400">
+            {product.promo.buy}+{product.promo.get} מתנה!
+          </div>
+        )}
         {/* Overlay for "View" on hover */}
         {isKit && (
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -113,17 +106,24 @@ const ProductCard: React.FC<{ product: Product; onOrder: (p: Product) => void }>
   );
 };
 
-const ProductCategoryPage: React.FC<ProductCategoryPageProps> = ({ categoryKey }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+const ProductCategoryPage: React.FC = () => {
+  const { categoryPath } = useParams();
+  const { categories, products } = useInventory();
+  
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const categoryDetails = CATEGORY_DETAILS[categoryKey];
-  const category = categoryDetails.category;
+  // Find category based on absolute path match
+  const activeCategory = categories.find(c => c.path === `/${categoryPath}`);
 
   useEffect(() => {
-    setProducts(ALL_PRODUCTS.filter((p) => p.category === category));
-  }, [category]);
+    if (activeCategory) {
+      setCategoryProducts(products.filter(p => p.category === activeCategory.id));
+    }
+  }, [activeCategory, products]);
+
+  if (!activeCategory) return <Navigate to="/" replace />;
 
   const handleOpenOrder = (product: Product) => {
     setSelectedProductForModal(product);
@@ -139,7 +139,7 @@ const ProductCategoryPage: React.FC<ProductCategoryPageProps> = ({ categoryKey }
     <div className="pb-12">
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 drop-shadow-md">
-          {categoryDetails.name}
+          {activeCategory.name}
         </h1>
         <p className="text-lg text-blue-100 max-w-2xl mx-auto">
           בחרו את המוצר המושלם עבורכם מהמגוון שלנו והזמינו בקלות.
@@ -147,7 +147,7 @@ const ProductCategoryPage: React.FC<ProductCategoryPageProps> = ({ categoryKey }
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {products.map((product) => (
+        {categoryProducts.map((product) => (
           <ProductCard
             key={product.id}
             product={product}

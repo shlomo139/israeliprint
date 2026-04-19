@@ -22,6 +22,7 @@ export interface Product {
   tiers: PriceTier[]; // Changed from variants to tiers
   kitImages?: string[]; // Optional array of image URLs for kits (specifically 6 images)
   costPrice?: number; // Cost price per unit for profit calculation
+  promo?: { buy: number; get: number } | null;
 }
 
 export enum CropOption {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { Save, Image as ImageIcon, Type, Power, Loader2, Upload } from 'lucide-react';
+import { Save, Image as ImageIcon, Type, Power, Loader2, Upload, Trash2 } from 'lucide-react';
 
 export const AdminSettingsTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -65,12 +65,22 @@ export const AdminSettingsTab: React.FC = () => {
         body: file,
         credentials: 'include'
       });
-      const data = await resp.json();
-      if (data.url) {
+      let data;
+      try {
+        data = await resp.json();
+      } catch (parseErr) {
+        alert('העלאה נכשלה: ייתכן והתמונה שוקלת מעל 4MB (מגבלת שרת). נסה לדחוס את התמונה.');
+        setUploading(false);
+        return;
+      }
+
+      if (!resp.ok || data.error) {
+        alert(`Upload error: ${data.error || 'Unknown server error'}`);
+      } else if (data.url) {
         handleChange('banner_image_url', data.url);
       }
-    } catch (err) {
-      alert('Upload failed');
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
     } finally {
       setUploading(false);
     }
@@ -146,7 +156,15 @@ export const AdminSettingsTab: React.FC = () => {
                   {uploading ? (
                     <div className="flex flex-col items-center text-amber-500"><Loader2 className="w-10 h-10 animate-spin mb-4"/><span className="font-black text-sm">מעלה ל-Vercel Blob...</span></div>
                   ) : settings.banner_image_url ? (
-                    <div className="relative relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 shadow-xl"><img src={settings.banner_image_url} className="absolute inset-0 w-full h-full object-cover" alt="Banner preview"/></div>
+                    <div className="relative relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 shadow-xl group/preview">
+                      <img src={settings.banner_image_url} className="absolute inset-0 w-full h-full object-cover" alt="Banner preview"/>
+                      <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleChange('banner_image_url', ''); }}
+                        className="absolute top-2 right-2 z-20 bg-rose-500 text-white p-2 rounded-xl opacity-0 group-hover/preview:opacity-100 transition-all hover:bg-rose-600 shadow-lg cursor-pointer"
+                      >
+                        <Trash2 className="w-5 h-5 pointer-events-none" />
+                      </button>
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center text-slate-500 group-hover/upload:text-amber-500 transition-colors"><Upload className="w-10 h-10 mb-4" /><span className="font-black">גרור לכאן תמונת פוסט / לחץ לבחירה</span><span className="text-xs mt-2 opacity-70">מומלץ פוסט מרובע (Instagram size) לקופץ הראשון</span></div>
                   )}

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CATEGORY_DETAILS } from '../constants';
-import { ALL_PRODUCTS } from '../data/products';
+import { useInventory } from '../src/InventoryContext';
 
 const HomePage: React.FC = () => {
-  // Find a cover image for each category based on first available product
-  const getCategoryImage = (categoryId: number) => {
-    const product = ALL_PRODUCTS.find(p => p.category === categoryId);
+  const { categories, products } = useInventory();
+
+  // Find a cover image for each category based on first available product if category has no image
+  const getCategoryImage = (cat: any) => {
+    if (cat.image_url) return cat.image_url;
+    const product = products.find(p => p.category === cat.id);
     return product ? product.imageUrl : '';
   };
 
@@ -22,11 +24,11 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {Object.values(CATEGORY_DETAILS).map((cat) => {
-          const coverImage = getCategoryImage(cat.category);
+        {categories.map((cat) => {
+          const coverImage = getCategoryImage(cat);
           return (
             <Link 
-              key={cat.path} 
+              key={cat.id} 
               to={cat.path}
               className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full transform transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl group cursor-pointer"
             >

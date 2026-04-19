@@ -34,6 +34,7 @@ import {
 import { getCostPrice, calculateProfit } from '../../../lib/pricing';
 import { AdminCatalogTab } from './AdminCatalogTab';
 import { AdminSettingsTab } from './AdminSettingsTab';
+import { useInventory } from '../../InventoryContext';
 
 interface Order {
   id: number;
@@ -84,6 +85,7 @@ const fmtTime = (d: string) => {
 
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { products } = useInventory();
   const [activeTab, setActiveTab] = useState<'orders' | 'dashboard' | 'catalog' | 'settings'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +173,14 @@ const AdminDashboardPage: React.FC = () => {
         finalRevenue = basePrice * (1 - discountPercent / 100);
     }
 
-    const costUnit = override != null ? Number(override) : getCostPrice(order.product_type, order.size);
+    // Merge DB logic: Use dynamic cost_price from DB if available!
+    const dbProduct = products.find(p => p.name === order.product_type);
+    let fallbackCost = getCostPrice(order.product_type, order.size);
+    if (dbProduct && (dbProduct.costPrice || 0) > 0) {
+      fallbackCost = Number(dbProduct.costPrice);
+    }
+
+    const costUnit = override != null ? Number(override) : fallbackCost;
     const totalCost = costUnit * qty;
     const profit = finalRevenue - totalCost;
     return { profit, finalRevenue, costUnit, totalCost };

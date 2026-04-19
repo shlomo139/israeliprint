@@ -23,10 +23,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Filename is required in query (?filename=...)' });
     }
 
-    if (!req.body) {
-      return res.status(400).json({ error: 'No valid file stream uploaded' });
-    }
-
     // Connects to Vercel string stream
     const blob = await put(filename, req, { access: 'public' });
     

@@ -28,7 +28,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, message: 'Category synched directly' });
 
     } else if (action === 'upsert_product') {
-      const { id, category_id, name, image_url, cost_price, status, tiers, kit_images } = payload;
+      const { id, category_id, name, image_url, cost_price, status, tiers, kit_images, promo } = payload;
+
+      // Ensure promo column exists
+      try {
+        await sql`ALTER TABLE products ADD COLUMN promo JSONB;`;
+      } catch(e) { /* ignore if already exists */ }
 
       // Block Saving Process -> Ensure COST_PRICE acts as a rigid anchor
       if (cost_price === undefined || cost_price === null || cost_price === '') {
@@ -36,13 +41,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       await sql`
-        INSERT INTO products (id, category_id, name, image_url, cost_price, status, tiers, kit_images)
-        VALUES (${id}, ${category_id}, ${name}, ${image_url}, ${cost_price}, ${status}, ${JSON.stringify(tiers)}, ${kit_images ? JSON.stringify(kit_images) : null})
+        INSERT INTO products (id, category_id, name, image_url, cost_price, status, tiers, kit_images, promo)
+        VALUES (${id}, ${category_id}, ${name}, ${image_url}, ${cost_price}, ${status}, ${JSON.stringify(tiers)}, ${kit_images ? JSON.stringify(kit_images) : null}, ${promo ? JSON.stringify(promo) : null})
         ON CONFLICT (id) DO UPDATE SET
           category_id=EXCLUDED.category_id, name=EXCLUDED.name, image_url=EXCLUDED.image_url, 
-          cost_price=EXCLUDED.cost_price, status=EXCLUDED.status, tiers=EXCLUDED.tiers, kit_images=EXCLUDED.kit_images;
+          cost_price=EXCLUDED.cost_price, status=EXCLUDED.status, tiers=EXCLUDED.tiers, kit_images=EXCLUDED.kit_images, promo=EXCLUDED.promo;
       `;
       return res.status(200).json({ success: true, message: 'Item synched including JSON hierarchies and discounts' });
+    } else if (action === 'delete_product') {
+      const { id } = payload;
+      await sql`DELETE FROM products WHERE id = ${id}`;
+      return res.status(200).json({ success: true, message: 'Item deleted' });
+
+    } else if (action === 'delete_category') {
+      const { id } = payload;
+      // also delete all products in this category? Let the foreign key handle it if CASCADE, or just let users know.
+      await sql`DELETE FROM categories WHERE id = ${id}`;
+      return res.status(200).json({ success: true, message: 'Category deleted' });
+      
     }
 
     return res.status(400).json({ error: 'Invalid Payload Action ID provided' });

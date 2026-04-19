@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { CATEGORY_DETAILS } from '../constants';
+import { useInventory } from '../src/InventoryContext';
 import { Menu, X, Home } from 'lucide-react';
 
 const Logo = () => (
@@ -11,6 +11,7 @@ const Logo = () => (
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { categories } = useInventory();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
@@ -26,7 +27,7 @@ const Header: React.FC = () => {
   // We use standard tailwind LTR/RTL support here safely or absolute manual.
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col shadow-md">
+      <header className="w-full flex flex-col shadow-md">
         {/* White Bar */}
         <div className="bg-white/95 backdrop-blur-md">
           <div className="container mx-auto px-4 relative">
@@ -86,7 +87,7 @@ const Header: React.FC = () => {
           <div className="h-px bg-gray-100 my-3" />
           
           <span className="text-gray-400 font-semibold px-4 pb-2 text-sm">המוצרים שלנו</span>
-          {Object.values(CATEGORY_DETAILS).map(cat => (
+          {categories.map(cat => (
             <NavLink key={cat.path} to={cat.path} className={navLinkClass} onClick={closeMenu}>
               {cat.name}
             </NavLink>
