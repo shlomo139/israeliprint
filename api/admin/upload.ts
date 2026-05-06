@@ -1,11 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
-
-// Simple check for our generated security token
-const checkAuth = (req: VercelRequest) => {
-  const cookies = req.headers.cookie || '';
-  return cookies.includes('admin_session=');
-};
+import { checkAuth } from '../../lib/auth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -13,7 +8,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  // if (!checkAuth(req)) return res.status(401).json({ error: 'Unauthorized access' });
+  
+  if (!checkAuth(req)) {
+    return res.status(401).json({ error: 'Unauthorized access' });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {

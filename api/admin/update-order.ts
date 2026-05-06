@@ -1,17 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '@vercel/postgres';
-import { parse } from 'cookie';
-
-function isValidSession(cookieValue: string): boolean {
-  try {
-    const decoded = Buffer.from(cookieValue, 'base64').toString('utf-8');
-    const [pin] = decoded.split(':');
-    const adminPin = (process.env.ADMIN_PIN || '').toString().trim();
-    return pin.trim() === adminPin;
-  } catch {
-    return false;
-  }
-}
+import { checkAuth } from '../../lib/auth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -23,11 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'PATCH') return res.status(405).json({ error: 'Method not allowed' });
 
   // Validate session
-  const cookieHeader = req.headers.cookie || '';
-  const cookies = parse(cookieHeader);
-  const sessionToken = cookies['admin_session'];
-
-  if (!sessionToken || !isValidSession(sessionToken)) {
+  if (!checkAuth(req)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

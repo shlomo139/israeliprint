@@ -235,7 +235,7 @@ export const AdminCatalogTab: React.FC = () => {
                 <div className="space-y-8">
                      <div className="flex justify-end">
                         <Button onClick={() => setEditingCategory({
-                            id: `cat_${Date.now()}`, name: 'קטגוריה חדשה', path: '/category-new', image_url: ''
+                            id: `cat_${Date.now()}`, name: 'קטגוריה חדשה', path: '', image_url: ''
                         })} className="bg-emerald-500 border-none text-slate-900 rounded-2xl shadow-xl font-black px-6">
                             <Plus className="w-5 h-5 ml-2"/> קטגוריה חדשה
                         </Button>
