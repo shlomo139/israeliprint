@@ -1,10 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '@vercel/postgres';
+import { handleCors } from '../../lib/cors.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS setup for public API
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  if (!handleCors(req, res, 'GET,OPTIONS')) return;
   
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
